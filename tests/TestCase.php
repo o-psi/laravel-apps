@@ -25,5 +25,8 @@ abstract class TestCase extends Orchestra
         $app['config']->set('offline.enabled', true);
         $app['config']->set('offline.cache_version', 1);
         $app['config']->set('offline.debug', false);
+
+        // Set required APP_KEY for encryption
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 }

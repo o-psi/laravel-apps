@@ -16,11 +16,13 @@ class OfflineService
         $template = $this->getServiceWorkerTemplate();
 
         // Inject configuration into service worker
-        $configJson = json_encode($config, JSON_PRETTY_PRINT);
+        // Use a more robust regex that handles nested objects
+        $configJson = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $serviceWorker = preg_replace(
-            '/const CONFIG = \{[^}]*\};/s',
+            '/const CONFIG = \{[\s\S]*?\n\};/m',
             'const CONFIG = ' . $configJson . ';',
-            $template
+            $template,
+            1
         );
 
         return $serviceWorker;
@@ -156,8 +158,16 @@ class OfflineService
         $consoleLog = $isDebug ? 'console.log' : '//';
         $isLivewire = config('pwa.livewire-app', false) ? 'data-navigate-once' : '';
 
+        // Include comprehensive offline support
+        $includeInterceptor = config('offline.intercept_all_requests', true);
+        $interceptorScript = $includeInterceptor ? '<script src="/js/offline-interceptor.js"></script>' : '';
+
         return <<<HTML
-        <!-- Laravel Offline Service Worker -->
+        <!-- Laravel Offline Scripts -->
+        <script src="/js/queue-manager.js"></script>
+        <script src="/js/form-persistence.js"></script>
+        {$interceptorScript}
+
         <script {$isLivewire}>
             "use strict";
             if ("serviceWorker" in navigator) {
@@ -187,7 +197,7 @@ class OfflineService
                 {$consoleLog}("[Offline] Service workers are not supported.");
             }
         </script>
-        <!-- Laravel Offline Service Worker end -->
+        <!-- Laravel Offline Scripts end -->
         HTML;
     }
 
@@ -223,29 +233,59 @@ class OfflineService
         <script>
             (function() {
                 const form = document.querySelector('[data-offline-sync] form');
-                if (!form) return;
+                if (!form || !window.OfflineQueue) return;
 
                 form.addEventListener('submit', function(e) {
                     if (!navigator.onLine) {
                         e.preventDefault();
 
-                        // Queue the request for background sync
                         const formData = new FormData(form);
-                        const data = {
-                            url: form.action,
-                            method: form.method,
-                            data: Object.fromEntries(formData)
+                        const data = Object.fromEntries(formData);
+
+                        // Convert FormData to JSON, handling CSRF token
+                        const body = JSON.stringify(data);
+                        const headers = {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         };
 
-                        // Store in IndexedDB (implementation in Phase 3)
-                        console.log('[Offline] Form queued for sync:', data);
-
-                        // Show user feedback
-                        alert('You are offline. This form will be submitted when you reconnect.');
+                        // Queue the request
+                        window.OfflineQueue.enqueue(
+                            form.action,
+                            form.method.toUpperCase(),
+                            headers,
+                            body,
+                            { type: 'form-submission' }
+                        ).then(() => {
+                            const notice = document.createElement('div');
+                            notice.textContent = '✓ Form saved and will sync when online';
+                            notice.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:1rem;border-radius:0.5rem;z-index:9999;';
+                            document.body.appendChild(notice);
+                            setTimeout(() => notice.remove(), 3000);
+                            form.reset();
+                        }).catch(error => {
+                            console.error('[Offline] Failed to queue form:', error);
+                            alert('Failed to save form offline. Please try again.');
+                        });
                     }
                 });
             })();
         </script>
+        HTML;
+    }
+
+    /**
+     * Generate sync status widget
+     */
+    public function syncStatusWidget(): string
+    {
+        if (! config('offline.enabled', true) || ! config('offline.sync.enabled', true)) {
+            return '';
+        }
+
+        return <<<'HTML'
+        <!-- Laravel Offline Sync Status Widget -->
+        <script src="/js/sync-status.js"></script>
         HTML;
     }
 }

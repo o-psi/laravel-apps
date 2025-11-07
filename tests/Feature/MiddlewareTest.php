@@ -30,9 +30,24 @@ class MiddlewareTest extends TestCase
 
         $response = $middleware->handle($request, function () {
             return new Response('<html></html>', 200, ['Content-Type' => 'text/html']);
-        }, 'cache-first', '3600');
+        }, 'cache-first,ttl=3600');
 
+        $this->assertEquals('cache-first', $response->headers->get('X-Offline-Strategy'));
         $this->assertEquals('3600', $response->headers->get('X-Offline-TTL'));
+    }
+
+    /** @test */
+    public function it_parses_middleware_parameters_correctly(): void
+    {
+        $middleware = new OfflineMiddleware();
+        $request = Request::create('/test', 'GET');
+
+        $response = $middleware->handle($request, function () {
+            return new Response('<html></html>', 200, ['Content-Type' => 'text/html']);
+        }, 'network-first,ttl=1800');
+
+        $this->assertEquals('network-first', $response->headers->get('X-Offline-Strategy'));
+        $this->assertEquals('1800', $response->headers->get('X-Offline-TTL'));
     }
 
     /** @test */

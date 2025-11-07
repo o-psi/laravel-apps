@@ -51,4 +51,13 @@ class BladeDirectivesTest extends TestCase
         $this->assertStringContainsString('ob_start', $compiled);
         $this->assertStringContainsString('syncWrapper', $compiled);
     }
+
+    /** @test */
+    public function it_registers_offline_sync_status_directive(): void
+    {
+        $compiled = Blade::compileString('@offlineSyncStatus');
+
+        $this->assertStringContainsString('OfflineService', $compiled);
+        $this->assertStringContainsString('syncStatusWidget', $compiled);
+    }
 }

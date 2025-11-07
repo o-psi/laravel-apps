@@ -236,11 +236,24 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData);
 
+                // Prepare headers with CSRF token if available
+                const csrfToken = form.querySelector('input[name="_token"]')?.value
+                    || document.querySelector('meta[name="csrf-token"]')?.content;
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+
+                if (csrfToken) {
+                    headers['X-CSRF-TOKEN'] = csrfToken;
+                }
+
                 // Queue the form submission
                 window.OfflineQueue.enqueue(
                     form.action,
                     form.method.toUpperCase(),
-                    { 'Content-Type': 'application/json' },
+                    headers,
                     JSON.stringify(data),
                     { formId, type: 'form-submission' }
                 ).then(() => {
@@ -248,11 +261,7 @@
                     clearFormData(formId);
 
                     // Show user feedback
-                    if (typeof showQueuedNotification === 'function') {
-                        showQueuedNotification(form);
-                    } else {
-                        alert('Your form has been saved and will be submitted when you\'re back online.');
-                    }
+                    showQueuedNotification(form);
                 }).catch((error) => {
                     console.error('[Form Persistence] Failed to queue form:', error);
                     alert('Failed to save form offline. Please try again.');
@@ -264,6 +273,39 @@
             log('Form submitted, clearing saved data');
             clearFormData(formId);
         });
+    }
+
+    /**
+     * Show notification that form was queued
+     */
+    function showQueuedNotification(form) {
+        const notification = document.createElement('div');
+        notification.className = 'offline-form-queued-notice';
+        notification.innerHTML = `
+            <span>✓ Form saved - will sync when online</span>
+        `;
+
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
     /**

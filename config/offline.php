@@ -134,9 +134,14 @@ return [
 
     'precache' => [
         '/offline.html',
-        // Add more URLs to precache:
-        // '/css/app.css',
+        // Critical offline functionality scripts
+        '/js/queue-manager.js',
+        '/js/form-persistence.js',
+        '/js/offline-interceptor.js',
+        '/js/sync-status.js',
+        // Add your app's JavaScript:
         // '/js/app.js',
+        // '/build/assets/app.js',
     ],
 
     /*
@@ -161,6 +166,26 @@ return [
     */
 
     'debug' => env('APP_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Intercept All Requests
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, automatically intercepts ALL HTTP requests (fetch, XHR,
+    | forms, links) and queues them when offline. Works with any HTML content.
+    |
+    | Customize behavior by defining window.OfflineInterceptor.shouldQueue():
+    |
+    | window.OfflineInterceptor.shouldQueue = function(method, url, headers) {
+    |     // Skip certain requests
+    |     if (url.includes('/livewire/')) return false;
+    |     return true; // Queue everything else
+    | };
+    |
+    */
+
+    'intercept_all_requests' => env('OFFLINE_INTERCEPT_ALL', true),
 
     /*
     |--------------------------------------------------------------------------

@@ -13,14 +13,15 @@ Laravel Offline transforms your Laravel applications into powerful offline-first
 
 ## Features
 
-### ✅ Available Now (v0.3.0)
+### ✅ Available Now (v0.3.0 - Enhanced)
 
 - **Multiple Cache Strategies** - cache-first, network-first, stale-while-revalidate, network-only, cache-only
 - **Route-Based Caching** - Configure strategies per route pattern with wildcard support
 - **Cache TTL Management** - Automatic freshness checking with stale-while-offline support
 - **Cache Size Limits** - Automatic FIFO cleanup when cache exceeds max items
 - **Background Sync** - IndexedDB queue manager with automatic retry and exponential backoff
-- **Request Queueing** - Queue POST/PUT/DELETE requests when offline, auto-sync when online
+- **Universal Request Queueing** - Automatically intercepts ALL HTTP requests (Fetch API, XHR, forms, links)
+- **Comprehensive HTML Support** - Works with any HTML element making HTTP requests, not just forms
 - **Form Persistence** - Auto-save forms to localStorage, restore on reload, queue when offline
 - **Sync Status Widget** - Real-time UI showing pending requests and sync progress
 - **Blade Directives** - Simple integration with `@offlineHead`, `@offlineScripts`, `@offlineStatus`, `@offlineSyncStatus`
@@ -28,6 +29,8 @@ Laravel Offline transforms your Laravel applications into powerful offline-first
 - **Artisan Commands** - `offline:install`, `offline:status`, `offline:clear`, `offline:routes`
 - **Developer Tools** - Debug logging with fresh/stale indicators and cache inspection
 - **Offline Status Indicator** - Visual feedback when connection is lost
+- **CSRF Token Handling** - Automatic CSRF token inclusion in queued requests
+- **Improved Error Handling** - Quota exceeded detection, transaction error handling, helpful error messages
 
 ### 🚧 Coming Soon
 
@@ -84,7 +87,23 @@ Edit `config/offline.php`:
 
 ### 3. That's It!
 
-Your app now has intelligent offline caching. Routes are cached according to your strategies.
+Your app now has **complete offline support**:
+
+**✅ JavaScript files are cached** - All .js files use cache-first strategy and work offline
+**✅ CSS files are cached** - All stylesheets work offline
+**✅ Images are cached** - All images work offline
+**✅ API requests are queued** - All mutations queued when offline
+
+**ALL HTTP requests are automatically handled**:
+- JavaScript files (`.js`) - Cached and available offline
+- CSS files (`.css`) - Cached and available offline
+- Images (`.png`, `.jpg`, etc.) - Cached on first load
+- Fetch API calls - Queued when offline
+- XMLHttpRequest/AJAX - Queued when offline
+- Form submissions - Queued when offline
+- Links with `data-method` - Queued when offline
+
+No additional configuration needed - your entire app works offline!
 
 ## Usage
 
@@ -108,14 +127,45 @@ Route::get('/profile', ProfileController::class)
 | `network-only` | Always fetch from network | Payment pages, admin panels |
 | `cache-only` | Only serve from cache | Offline-only pages |
 
-### Background Sync & Form Persistence
+### Universal Offline Support - Works with ALL HTML
 
-Never lose user data - forms auto-save to localStorage and queue when offline:
+**Automatic Request Interception** - No configuration needed! Simply add `@offlineScripts` and ALL HTTP requests are automatically queued when offline:
+
+```blade
+@offlineScripts {{-- That's it! Everything works offline now --}}
+```
+
+Automatically handles:
+- **Fetch API** - `fetch('/api/users', { method: 'POST', body: ... })`
+- **AJAX/XHR** - `$.ajax({ url: '/api/save', type: 'POST', ... })`
+- **Forms** - Any `<form method="POST">` submission
+- **Links** - `<a href="/delete" data-method="DELETE">Delete</a>`
+
+### Customizing Behavior
+
+Need to skip certain requests? Define a custom filter:
+
+```javascript
+// Skip specific URLs or frameworks
+window.OfflineInterceptor.shouldQueue = function(method, url, headers) {
+    // Don't queue Livewire requests
+    if (url.includes('/livewire/')) return false;
+
+    // Don't queue broadcasting
+    if (url.includes('/broadcasting/')) return false;
+
+    // Queue everything else
+    return true;
+};
+```
+
+This runs **before** your app loads, giving you full control over what gets queued.
+
+### Optional: Form Persistence
+
+For enhanced UX, enable auto-save for specific forms:
 
 ```html
-<script src="/js/queue-manager.js"></script>
-<script src="/js/form-persistence.js"></script>
-
 <form data-persist="checkout-form" action="/api/checkout" method="POST">
     <input type="text" name="email">
     <textarea name="notes"></textarea>
@@ -128,7 +178,7 @@ Never lose user data - forms auto-save to localStorage and queue when offline:
 - Automatic retry with exponential backoff when connection returns
 - Real-time sync status shown in UI widget
 
-Or use Blade directive for automatic queueing:
+Or use Blade directive:
 
 ```blade
 @offlineSync

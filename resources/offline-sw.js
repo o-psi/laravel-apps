@@ -58,12 +58,22 @@ function matchesPattern(url, pattern) {
  * Check if URL is an asset (based on extension)
  */
 function isAsset(url) {
-    const urlPath = new URL(url).pathname;
-    return CONFIG.assetPatterns.some(pattern => {
-        const ext = pattern.replace('*.', '\\.');
-        const regex = new RegExp(ext + '$', 'i');
-        return regex.test(urlPath);
-    });
+    try {
+        const urlPath = new URL(url).pathname;
+
+        // Always treat JS files as cacheable assets
+        if (urlPath.endsWith('.js')) {
+            return true;
+        }
+
+        return CONFIG.assetPatterns.some(pattern => {
+            const ext = pattern.replace('*.', '\\.');
+            const regex = new RegExp(ext + '$', 'i');
+            return regex.test(urlPath);
+        });
+    } catch (e) {
+        return false;
+    }
 }
 
 /**
@@ -357,18 +367,31 @@ self.addEventListener('install', (event) => {
     log('Service worker installing...');
 
     event.waitUntil(
-        caches.open(CACHE_NAMES.pages)
-            .then((cache) => {
-                log('Precaching:', CONFIG.precache);
-                return cache.addAll(CONFIG.precache);
+        Promise.all([
+            // Cache pages
+            caches.open(CACHE_NAMES.pages).then((cache) => {
+                const pages = CONFIG.precache.filter(url =>
+                    !url.endsWith('.js') && !url.endsWith('.css')
+                );
+                log('Precaching pages:', pages);
+                return cache.addAll(pages);
+            }),
+            // Cache assets (JS, CSS)
+            caches.open(CACHE_NAMES.assets).then((cache) => {
+                const assets = CONFIG.precache.filter(url =>
+                    url.endsWith('.js') || url.endsWith('.css')
+                );
+                log('Precaching assets:', assets);
+                return cache.addAll(assets);
             })
-            .then(() => {
-                log('Service worker installed');
-                return self.skipWaiting();
-            })
-            .catch((error) => {
-                log('Installation failed:', error);
-            })
+        ])
+        .then(() => {
+            log('Service worker installed');
+            return self.skipWaiting();
+        })
+        .catch((error) => {
+            log('Installation failed:', error);
+        })
     );
 });
 

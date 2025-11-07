@@ -31,15 +31,36 @@
                 return;
             }
 
+            // Check if IndexedDB is available
+            if (!window.indexedDB) {
+                const error = new Error('IndexedDB is not supported in this browser');
+                console.error('[Queue Manager]', error.message);
+                reject(error);
+                return;
+            }
+
             const request = indexedDB.open(DB_NAME, DB_VERSION);
 
             request.onerror = () => {
-                console.error('[Queue Manager] Failed to open database:', request.error);
-                reject(request.error);
+                const error = request.error;
+                console.error('[Queue Manager] Failed to open database:', error);
+
+                // Check for quota exceeded error
+                if (error.name === 'QuotaExceededError') {
+                    console.error('[Queue Manager] Storage quota exceeded. Please free up space.');
+                }
+
+                reject(error);
             };
 
             request.onsuccess = () => {
                 db = request.result;
+
+                // Handle database errors after opening
+                db.onerror = (event) => {
+                    console.error('[Queue Manager] Database error:', event.target.error);
+                };
+
                 log('Database initialized');
                 resolve(db);
             };
@@ -61,6 +82,10 @@
                     log('Object store created');
                 }
             };
+
+            request.onblocked = () => {
+                console.warn('[Queue Manager] Database upgrade blocked. Close other tabs with this site.');
+            };
         });
     }
 
@@ -68,47 +93,64 @@
      * Add request to queue
      */
     async function enqueue(url, method, headers, body, metadata = {}) {
-        const database = await initDB();
+        try {
+            const database = await initDB();
 
-        return new Promise((resolve, reject) => {
-            const transaction = database.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
 
-            const request = {
-                url: url,
-                method: method,
-                headers: headers || {},
-                body: body,
-                metadata: metadata,
-                timestamp: Date.now(),
-                status: 'pending',
-                retries: 0,
-                lastAttempt: null,
-                error: null
-            };
+                const request = {
+                    url: url,
+                    method: method,
+                    headers: headers || {},
+                    body: body,
+                    metadata: metadata,
+                    timestamp: Date.now(),
+                    status: 'pending',
+                    retries: 0,
+                    lastAttempt: null,
+                    error: null
+                };
 
-            const addRequest = store.add(request);
+                const addRequest = store.add(request);
 
-            addRequest.onsuccess = () => {
-                log('Request queued:', request.method, request.url);
-                resolve(addRequest.result);
+                addRequest.onsuccess = () => {
+                    log('Request queued:', request.method, request.url);
+                    resolve(addRequest.result);
 
-                // Dispatch event for UI updates
-                window.dispatchEvent(new CustomEvent('offline-queue-updated', {
-                    detail: { action: 'added', id: addRequest.result }
-                }));
+                    // Dispatch event for UI updates
+                    window.dispatchEvent(new CustomEvent('offline-queue-updated', {
+                        detail: { action: 'added', id: addRequest.result }
+                    }));
 
-                // Try to sync immediately if online
-                if (navigator.onLine) {
-                    processQueue();
-                }
-            };
+                    // Try to sync immediately if online
+                    if (navigator.onLine) {
+                        processQueue();
+                    }
+                };
 
-            addRequest.onerror = () => {
-                console.error('[Queue Manager] Failed to queue request:', addRequest.error);
-                reject(addRequest.error);
-            };
-        });
+                addRequest.onerror = () => {
+                    const error = addRequest.error;
+                    console.error('[Queue Manager] Failed to queue request:', error);
+
+                    // Provide helpful error messages
+                    if (error.name === 'QuotaExceededError') {
+                        error.message = 'Storage quota exceeded. Cannot queue more requests.';
+                    }
+
+                    reject(error);
+                };
+
+                transaction.onerror = () => {
+                    console.error('[Queue Manager] Transaction failed:', transaction.error);
+                    reject(transaction.error);
+                };
+            });
+        } catch (error) {
+            console.error('[Queue Manager] Failed to initialize database:', error);
+            throw error;
+        }
     }
 
     /**

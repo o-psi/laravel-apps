@@ -48,6 +48,13 @@ class OfflineInstallCommand extends Command
             '--force' => false,
         ]);
 
+        // Publish JavaScript assets (Phase 3)
+        $this->info('Publishing JavaScript assets...');
+        $this->call('vendor:publish', [
+            '--tag' => 'offline:assets',
+            '--force' => false,
+        ]);
+
         $this->newLine();
         $this->info('✓ Laravel Offline installed successfully!');
         $this->newLine();

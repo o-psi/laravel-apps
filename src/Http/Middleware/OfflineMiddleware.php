@@ -19,7 +19,7 @@ class OfflineMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, ?string $strategy = null, ?string $ttl = null): Response
+    public function handle(Request $request, Closure $next, ?string $params = null): Response
     {
         $response = $next($request);
 
@@ -28,37 +28,56 @@ class OfflineMiddleware
             return $response;
         }
 
-        // Parse parameters
-        $params = $this->parseParameters($strategy, $ttl);
+        // Parse parameters from string like "cache-first,ttl=3600"
+        $parsed = $this->parseParameters($params);
 
         // Add cache control headers
-        if (isset($params['strategy'])) {
-            $response->header('X-Offline-Strategy', $params['strategy']);
+        if (isset($parsed['strategy'])) {
+            $response->header('X-Offline-Strategy', $parsed['strategy']);
         }
 
-        if (isset($params['ttl'])) {
-            $response->header('X-Offline-TTL', $params['ttl']);
+        if (isset($parsed['ttl'])) {
+            $response->header('X-Offline-TTL', $parsed['ttl']);
         }
 
         return $response;
     }
 
     /**
-     * Parse middleware parameters
+     * Parse middleware parameters from string
+     *
+     * Examples:
+     *   "cache-first" => ['strategy' => 'cache-first']
+     *   "cache-first,ttl=3600" => ['strategy' => 'cache-first', 'ttl' => '3600']
+     *   "network-first,ttl=1800" => ['strategy' => 'network-first', 'ttl' => '1800']
      */
-    protected function parseParameters(?string $strategy, ?string $ttl): array
+    protected function parseParameters(?string $params): array
     {
-        $params = [];
+        $result = [];
 
-        if ($strategy) {
-            $params['strategy'] = $strategy;
+        if (! $params) {
+            return $result;
         }
 
-        if ($ttl) {
-            $params['ttl'] = $ttl;
+        // Split by comma
+        $parts = explode(',', $params);
+
+        foreach ($parts as $part) {
+            $part = trim($part);
+
+            // Check if it's a key=value pair
+            if (str_contains($part, '=')) {
+                [$key, $value] = explode('=', $part, 2);
+                $result[trim($key)] = trim($value);
+            } else {
+                // First standalone value is the strategy
+                if (! isset($result['strategy'])) {
+                    $result['strategy'] = $part;
+                }
+            }
         }
 
-        return $params;
+        return $result;
     }
 
     /**

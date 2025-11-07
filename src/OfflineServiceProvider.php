@@ -62,9 +62,8 @@ class OfflineServiceProvider extends ServiceProvider
             __DIR__.'/../resources/offline.html' => public_path('offline.html'),
         ], 'offline:resources');
 
-        $this->publishes([
-            __DIR__.'/../resources/sw.js' => public_path('sw.js'),
-        ], 'offline:resources');
+        // Note: Service worker is dynamically generated, not published as static file
+        // It's served at route /offline-sw.js via OfflineController
 
         $this->publishes([
             __DIR__.'/../resources/logo.png' => public_path('logo.png'),
@@ -74,6 +73,7 @@ class OfflineServiceProvider extends ServiceProvider
             __DIR__.'/../resources/form-persistence.js' => public_path('js/form-persistence.js'),
             __DIR__.'/../resources/queue-manager.js' => public_path('js/queue-manager.js'),
             __DIR__.'/../resources/sync-status.js' => public_path('js/sync-status.js'),
+            __DIR__.'/../resources/offline-interceptor.js' => public_path('js/offline-interceptor.js'),
         ], 'offline:assets');
 
     }
