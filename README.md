@@ -1,57 +1,67 @@
-# PWA Easy Setup for Laravel - Livewire, Vue.js & React.js
+# Laravel Offline - True Offline-First for Laravel
 
+> Enhanced fork of [laravel-pwa](https://github.com/eramitgupta/laravel-pwa) with advanced offline capabilities
 
-<center>
-    <img width="956" alt="Screenshot 2024-10-04 at 10 34 23 PM" src="https://github.com/user-attachments/assets/2b187de0-d5cc-4871-9c5d-ce0ffbb5a26c">
-</center>
 <div align="center">
 
-[![Packagist License](https://img.shields.io/badge/Licence-MIT-blue)](https://github.com/eramitgupta/laravel-pwa/blob/main/LICENSE)
-[![Latest Stable Version](https://img.shields.io/packagist/v/erag/laravel-pwa?label=Stable)](https://packagist.org/packages/erag/laravel-pwa)
-[![Total Downloads](https://img.shields.io/packagist/dt/erag/laravel-pwa.svg?label=Downloads)](https://packagist.org/packages/erag/laravel-pwa)
+[![License](https://img.shields.io/badge/Licence-MIT-blue)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-In%20Development-orange)](https://github.com/o-psi/laravel-apps)
+[![Laravel](https://img.shields.io/badge/Laravel-8.x%20to%2012.x-red)](https://laravel.com)
 
 </div>
 
-Laravel PWA is a package designed to seamlessly integrate Progressive Web Application (PWA) functionality into your Laravel projects. With this package, you can easily configure, update the manifest, and register service workers, enabling any Laravel app to function as a PWA.
+## 🎯 Vision
+
+Transform Laravel applications into true offline-first experiences. Not just a PWA manifest generator - this package provides intelligent caching, background sync, and request queueing so your Laravel apps work seamlessly when users lose connectivity.
+
+## 📊 Current Status: **In Development**
+
+This is an active fork of [eramitgupta/laravel-pwa](https://github.com/eramitgupta/laravel-pwa) being enhanced with production-ready offline functionality.
+
+**Base Package (Working Now)**: ✅ All laravel-pwa features
+
+**Enhancements (In Progress)**: 🚧 See roadmap below
 
 ---
 
-## ✨ Features 🚀
+## ✨ Features
 
-* ⚙️ **Auto-generate** PWA manifest and service worker files
-* 🧩 **Configurable "Add to Home Screen"** install prompt with one-click integration
-* 🔄 **Supports Laravel versions** 8.x to 12.x out of the box
-* ⚡ **Quick setup** with minimal configuration required
-* 📱🖥️ **Fully responsive** — works on both mobile and desktop browsers
-* 🛠️ **Customizable via `config/pwa.php`** — control icons, theme color, name, and more
-* 🧑‍💻 **Blade directives included** for effortless frontend usage
-* 🔐 **HTTPS ready** — ensures secure and reliable PWA experience
-* 🌐 **Compatible with Blade, Livewire, Vue 3, and React**
+### ✅ Available Now (Base laravel-pwa)
+
+- ⚙️ Auto-generate PWA manifest and service worker files
+- 🧩 Configurable "Add to Home Screen" install prompt
+- 📱 Fully responsive - works on mobile and desktop
+- 🛠️ Customizable via `config/pwa.php`
+- 🧑‍💻 Blade directives (`@PwaHead`, `@RegisterServiceWorkerScript`)
+- 🔐 HTTPS ready
+- 🌐 Compatible with Blade, Livewire, Vue 3, and React
+- 🔄 Supports Laravel 8.x to 12.x
+
+### 🚧 Coming Soon (Offline Enhancements)
+
+- 🚀 **Advanced Caching Strategies** - cache-first, network-first, stale-while-revalidate per route
+- 📦 **Background Sync** - queue requests when offline, auto-sync when online
+- 💾 **IndexedDB Storage** - reliable offline data storage with retry logic
+- 🎯 **Per-Route Control** - configure cache behavior via middleware or config
+- 📝 **Form Persistence** - auto-save forms to localStorage, never lose data
+- 🔍 **Developer Tools** - cache inspector, Artisan commands, debug panel
+- ⚡ **Zero Config** - works out of the box, powerful when configured
+- 🎨 **New Directives** - `@offlineCache`, `@offlineSync`, `@offlineStatus`
 
 ---
 
-## Important ⚠️
-
-Note: PWAs require a secure HTTPS connection to work correctly. Ensure your application is hosted with HTTPS; otherwise, service workers and other PWA features will not function as expected.
-
-
-## Installation 📦
-
-To get started, install the package using Composer:
+## 📦 Installation (Current Base Package)
 
 ```bash
 composer require erag/laravel-pwa
 ```
 
-## Register the Service Provider
+### For Laravel 11.x, 12.x
 
-### For Laravel (Optional) v11.x, v12.x
-
-Ensure the service provider is registered in your `/bootstrap/providers.php` file:
+Register in `/bootstrap/providers.php`:
 
 ```php
 use EragLaravelPwa\EragLaravelPwaServiceProvider;
-
 
 return [
     // ...
@@ -59,9 +69,9 @@ return [
 ];
 ```
 
-### For Laravel v8.x, v9.x, v10.x
+### For Laravel 8.x, 9.x, 10.x
 
-Ensure the service provider is registered in your `config/app.php` file:
+Register in `config/app.php`:
 
 ```php
 'providers' => [
@@ -70,31 +80,49 @@ Ensure the service provider is registered in your `config/app.php` file:
 ],
 ```
 
-Once installed, publish the PWA configuration files using:
+### Publish Assets
 
 ```bash
 php artisan erag:install-pwa
 ```
 
-This will create the required configuration file `config/pwa.php` and set up PWA functionality for your application.
+---
 
-## Configuration ⚙️
+## 🚀 Quick Start
 
-### Main Configuration File: `config/pwa.php`
+### 1. Add Blade Directives
 
-This is your main configuration file where you can customize the PWA settings.
+In your main layout file:
+
+```blade
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @PwaHead
+    <title>My App</title>
+</head>
+<body>
+    <!-- Your content -->
+
+    @RegisterServiceWorkerScript
+</body>
+</html>
+```
+
+### 2. Configure (Optional)
+
+Edit `config/pwa.php`:
 
 ```php
 return [
-    'install-button' => true, // Show or hide the install button globally.
+    'install-button' => true,
 
     'manifest' => [
-        'name' => 'Laravel PWA',
-        'short_name' => 'LPT',
-        'background_color' => '#6777ef',
-        'display' => 'fullscreen',
-        'description' => 'A Progressive Web Application setup for Laravel projects.',
+        'name' => 'My Laravel App',
+        'short_name' => 'MyApp',
+        'background_color' => '#ffffff',
         'theme_color' => '#6777ef',
+        'display' => 'standalone',
         'icons' => [
             [
                 'src' => 'logo.png',
@@ -104,65 +132,145 @@ return [
         ],
     ],
 
-    'debug' => env('APP_DEBUG', false), // Show or hide console.log in the browser globally.
-    
-    
+    'debug' => env('APP_DEBUG', false),
     'livewire-app' => false,
 ];
 ```
 
-### Customizing Manifest File
+### 3. Update Manifest
 
-After changing `config/pwa.php` in your `manifest` array, run this command
-You can update your PWA manifest file by running:
+After config changes:
 
 ```bash
 php artisan erag:update-manifest
 ```
 
-## Usage 🛠️
+---
 
-To integrate PWA functionality into your layouts, use the provided Blade directives.
+## 🎯 Planned Usage (Offline Enhancements)
 
-### 1. **Add Meta Tags**
+These features are planned and documented in [OFFLINE_PLAN.md](OFFLINE_PLAN.md).
 
-Place the `@PwaHead` directive inside the `<head>` tag of your main layout file:
+### Per-Route Cache Control
 
-```blade
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    @PwaHead <!-- Add this directive to include the PWA meta tags -->
-    <title>Your App Title</title>
-</head>
-<body>
+```php
+Route::get('/dashboard', DashboardController::class)
+    ->middleware('offline:cache-first,ttl=3600');
 ```
 
-### 2. **Register Service Worker**
-
-Just before the closing `</body>` tag in your main layout file, add:
+### Offline-Capable Forms
 
 ```blade
-    @RegisterServiceWorkerScript <!-- This registers the service worker -->
-</body>
-</html>
+@offlineSync
+<form action="/api/save" method="POST">
+    @csrf
+    <input type="text" name="title" required>
+    <button type="submit">Save</button>
+</form>
+@endofflineSync
 ```
-These directives will automatically generate the necessary tags and JavaScript for the PWA.
 
+### Form Auto-Save
 
-## Facade Usage 🎯
+```blade
+<form id="my-form" data-persist="my-unique-form">
+    <input type="text" name="title">
+    <textarea name="content"></textarea>
+    <button type="submit">Save</button>
+</form>
+```
 
-You can easily update the manifest dynamically at runtime using the provided `PWA` Facade.
+### Cache Strategies Configuration
+
+```php
+// config/offline.php (future)
+'strategies' => [
+    '/dashboard*' => 'cache-first',
+    '/api/*' => 'network-first',
+    '/static/*' => 'cache-first',
+],
+```
+
+---
+
+## 🗺️ Roadmap
+
+### Phase 1: Enhanced Service Worker (Weeks 1-2)
+- [ ] Multiple cache strategies (network-first, cache-first, stale-while-revalidate)
+- [ ] Route pattern matching
+- [ ] Cache versioning and auto-cleanup
+- [ ] Runtime API caching
+
+### Phase 2: Configuration & Middleware (Weeks 3-4)
+- [ ] Offline middleware for per-route control
+- [ ] Extended config with cache strategies
+- [ ] New Blade directives
+- [ ] Cache TTL and size limits
+
+### Phase 3: Background Sync (Weeks 5-6)
+- [ ] IndexedDB queue manager
+- [ ] Request queueing (POST/PUT/DELETE)
+- [ ] Auto-retry with backoff
+- [ ] Form auto-save to localStorage
+
+### Phase 4: Developer Tools (Weeks 7-8)
+- [ ] Cache inspector UI
+- [ ] Artisan commands (`offline:clear`, `offline:status`)
+- [ ] Debug toolbar integration
+- [ ] Performance metrics
+
+### Phase 5: Production Ready (Weeks 9-12)
+- [ ] Conflict resolution strategies
+- [ ] File upload queueing
+- [ ] Multi-tab synchronization
+- [ ] Comprehensive testing
+- [ ] v1.0.0 release
+
+**See [ROADMAP.md](ROADMAP.md) for detailed timeline and milestones.**
+
+---
+
+## 📚 Documentation
+
+- **[OFFLINE_PLAN.md](OFFLINE_PLAN.md)** - Complete vision and features
+- **[IMPLEMENTATION.md](IMPLEMENTATION.md)** - Detailed technical implementation guide
+- **[QUICKSTART.md](QUICKSTART.md)** - 30-minute development setup
+- **[ROADMAP.md](ROADMAP.md)** - Timeline, milestones, success metrics
+- **[claude.md](claude.md)** - Architecture and competitive analysis
+
+---
+
+## 🆚 Why This Fork?
+
+| Feature | This Fork (Future) | laravel-pwa | Other PWA Packages |
+|---------|-------------------|-------------|-------------------|
+| PWA Manifest | ✅ | ✅ | ✅ |
+| Service Worker | ✅ Enhanced | ✅ Basic | ✅ Basic |
+| Offline Page | ✅ | ✅ | ✅ |
+| **Multiple Cache Strategies** | ✅ | ❌ | ❌ |
+| **Background Sync** | ✅ | ❌ | ❌ |
+| **Request Queueing** | ✅ | ❌ | ❌ |
+| **Form Persistence** | ✅ | ❌ | ❌ |
+| **Per-Route Control** | ✅ | ❌ | ❌ |
+| **Developer Tools** | ✅ | ❌ | ❌ |
+| **Offline Data Caching** | ✅ | ❌ Only offline.html | ❌ |
+| **IndexedDB Queue** | ✅ | ❌ | ❌ |
+
+---
+
+## 🎨 Current Features (Base Package)
+
+### Facade Usage
+
+Dynamically update the manifest:
 
 ```php
 use EragLaravelPwa\Facades\PWA;
 
 PWA::update([
-    'name' => 'Laravel Apps',
-    'short_name' => 'LA',
-    'background_color' => '#6777ef',
-    'display' => 'fullscreen',
-    'description' => 'A Progressive Web Application setup for Laravel projects.',
+    'name' => 'My Updated App',
+    'short_name' => 'MyApp',
+    'background_color' => '#ffffff',
     'theme_color' => '#6777ef',
     'icons' => [
         [
@@ -174,115 +282,95 @@ PWA::update([
 ]);
 ```
 
-- This will immediately update your `manifest.json` file in the public directory.
-- You can call this from a controller, job, or anywhere inside your Laravel project where you need to update PWA settings dynamically.
-
-✅ Make sure `public/` folder is writable to allow manifest updates!
-
-This command updates the `manifest.json` file located in the public directory of your Laravel project.
-
-
-
-## Uploading a Logo via PWA 🌟
-To update the PWA logo dynamically, follow these steps:
-Your Laravel PWA is now configured to update the logo dynamically! 🚀
-
-#### 1. **Create a Controller Method**
-
-**Input Key Name:** `logo` 
-
-Make sure the image is in PNG format, at least 512x512 pixels, and does not exceed 1024 KB in size.
-
-```html
-<input type="file" name="logo" accept=".png">
-```
-
+### Logo Upload
 
 ```php
-array:2 [▼ // EragLaravelPwa/src/Core/PWA.php:19
-  "_token" => "iKbZh21VsYZMpNd9TN12Ul5SoysQzkMXlQkhB5Ub"
-  "logo" => Illuminate\Http\UploadedFile{#1426 ▶}]
-```
-
-```php
-namespace App\Http\Controllers;
-
 use EragLaravelPwa\Core\PWA;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 
-class SettingsController extends Controller
+public function uploadLogo(Request $request)
 {
-    public function uploadLogo(Request $request)
-    {
-        $response = PWA::processLogo($request);
+    $response = PWA::processLogo($request);
 
-        if ($response['status']) {
-            return redirect()->back()->with('success', $response['message']);
-        }
-
-        return redirect()->back()->withErrors($response['errors'] ?? ['Something went wrong.']);
+    if ($response['status']) {
+        return redirect()->back()->with('success', $response['message']);
     }
+
+    return redirect()->back()->withErrors($response['errors']);
 }
 ```
-Once uploaded, the new logo will be available at `http://yourdomain.com/logo.png`.
 
-## Screenshots 📸
+Logo requirements:
+- PNG format
+- 512x512 minimum
+- Max 1024 KB
 
-<img width="1470" alt="Screenshot 2024-09-19 at 10 11 01 PM" src="https://github.com/user-attachments/assets/27c08862-0557-4fbd-bd8f-90b9d05f67b3">
+---
 
-### Installing PWA App
+## ⚠️ Important Notes
 
-<img width="1470" alt="Screenshot 2024-09-19 at 10 13 23 PM" src="https://github.com/user-attachments/assets/5e58a596-3267-42d9-98d5-c48b0f54d3ed">
+- **HTTPS Required**: PWAs and service workers require HTTPS in production
+- **In Development**: Offline enhancements are actively being built
+- **Base Package Works**: All original laravel-pwa functionality is stable
+- **Breaking Changes**: May occur during development (pre-v1.0)
 
-### Offline Page
+---
 
-<img width="1470" alt="Screenshot 2024-09-19 at 10 13 52 PM" src="https://github.com/user-attachments/assets/1a80465e-0307-43ac-a1bc-9bca2cf16f8d">
+## 🤝 Contributing
 
-## Contribution 🧑‍💻
+We're actively building this! Contributions welcome:
 
-We appreciate your interest in contributing to this Laravel PWA project! Whether you're reporting issues, fixing bugs, or adding new features, your help is greatly appreciated.
+1. Check [ROADMAP.md](ROADMAP.md) for current priorities
+2. Read [IMPLEMENTATION.md](IMPLEMENTATION.md) for technical details
+3. Fork and create feature branches
+4. Submit PRs with clear descriptions
+5. Follow PSR-12 coding standards
 
-### Forking and Cloning the Repository
+### Development Setup
 
-1. Go to the repository page on GitHub.
-2. Click the **Fork** button at the top-right corner of the repository page.
-3. Clone your forked repository:
+```bash
+git clone https://github.com/o-psi/laravel-apps.git
+cd laravel-apps
 
-   ```bash
-   git clone https://github.com/your-username/laravel-pwa.git
-   ```
+# See QUICKSTART.md for detailed setup instructions
+```
 
-### Reporting Issues
+---
 
-If you encounter any issues, please check if the issue already exists in the **Issues** section. If not, create a new issue with the following details:
-- Steps to reproduce the issue
-- Expected and actual behavior
-- Laravel version
-- Any relevant logs or screenshots
+## 📸 Screenshots (Base Package)
 
-### Submit a Pull Request
+<img width="1470" alt="PWA Install Prompt" src="https://github.com/user-attachments/assets/27c08862-0557-4fbd-bd8f-90b9d05f67b3">
 
-When you're ready to contribute, open a pull request describing the changes you’ve made and how they improve the project. Please ensure:
-- All commits are squashed into one clean commit.
-- The code follows **PSR-12** standards.
-- You’ve tested the changes locally.
+<img width="1470" alt="Installed PWA" src="https://github.com/user-attachments/assets/5e58a596-3267-42d9-98d5-c48b0f54d3ed">
 
-### Coding Standards
+<img width="1470" alt="Offline Page" src="https://github.com/user-attachments/assets/1a80465e-0307-43ac-a1bc-9bca2cf16f8d">
 
-- Follow the [PSR-12](https://www.php-fig.org/psr/psr-12/) PHP coding standards.
-- Keep your commit history clean and meaningful.
-- Add comments where needed but avoid over-commenting.
+---
 
-## Example Workflow 🌟
+## 🙏 Credits
 
-Here’s a simple example of how to use this package:
+Built on top of [eramitgupta/laravel-pwa](https://github.com/eramitgupta/laravel-pwa) - an excellent foundation for PWA functionality in Laravel.
 
-1. Install the package via Composer.
-2. Publish the configuration files.
-3. Add the `@PwaHead` directive in your layout file’s `<head>`.
-4. Add the `@RegisterServiceWorkerScript` directive before the closing `</body>` tag.
-5. Customize the `config/pwa.php` to fit your project’s needs.
-6. Run `php artisan erag:pwa-update-manifest` to update the manifest file.
-7. That's it! Your Laravel app is now PWA-enabled. 🚀
+**Original Package**: erag/laravel-pwa by [Amit Gupta](https://github.com/eramitgupta)
 
+**This Fork**: Enhanced with offline-first capabilities for production use
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file
+
+---
+
+## 🚀 Quick Links
+
+- **Base Package**: [eramitgupta/laravel-pwa](https://github.com/eramitgupta/laravel-pwa)
+- **This Fork**: [o-psi/laravel-apps](https://github.com/o-psi/laravel-apps)
+- **Issues**: [Report bugs or request features](https://github.com/o-psi/laravel-apps/issues)
+- **Discussions**: [Ask questions](https://github.com/o-psi/laravel-apps/discussions)
+
+---
+
+**Status**: 🚧 Active Development | **Target**: Production-ready v1.0 in ~3 months
+
+⭐ Star this repo to follow development progress!
