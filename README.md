@@ -7,27 +7,28 @@
 
 Laravel Offline transforms your Laravel applications into powerful offline-first experiences. Built on top of [laravel-pwa](https://github.com/eramitgupta/laravel-pwa), it adds intelligent caching strategies, background sync, and request queueing.
 
-## Current Status: v0.1.0 - MVP Ready
+## Current Status: v0.2.0 - Enhanced Configuration
 
-**Phase 1 Complete** - Enhanced service worker with multiple cache strategies, configuration system, and developer tools.
+**Phase 1 & 2 Complete** - Enhanced service worker, multiple cache strategies, TTL management, form persistence, and comprehensive developer tools.
 
 ## Features
 
-### ✅ Available Now (v0.1.0)
+### ✅ Available Now (v0.2.0)
 
 - **Multiple Cache Strategies** - cache-first, network-first, stale-while-revalidate, network-only, cache-only
 - **Route-Based Caching** - Configure strategies per route pattern with wildcard support
-- **Cache Versioning** - Automatic cache invalidation and cleanup
+- **Cache TTL Management** - Automatic freshness checking with stale-while-offline support
+- **Cache Size Limits** - Automatic FIFO cleanup when cache exceeds max items
+- **Form Persistence** - Auto-save forms to localStorage, restore on reload (never lose user data)
 - **Blade Directives** - Simple integration with `@offlineHead`, `@offlineScripts`, `@offlineStatus`
 - **Middleware Support** - Per-route cache control via middleware
-- **Artisan Commands** - `offline:install`, `offline:status`, `offline:clear`
-- **Developer Tools** - Debug logging and cache inspection
+- **Artisan Commands** - `offline:install`, `offline:status`, `offline:clear`, `offline:routes`
+- **Developer Tools** - Debug logging with fresh/stale indicators and cache inspection
 - **Offline Status Indicator** - Visual feedback when connection is lost
 
 ### 🚧 Coming Soon
 
 - Background sync with IndexedDB queue (Phase 3)
-- Form persistence and auto-save (Phase 3)
 - Cache inspector UI (Phase 4)
 - Advanced conflict resolution (Phase 5)
 
@@ -103,6 +104,22 @@ Route::get('/profile', ProfileController::class)
 | `network-only` | Always fetch from network | Payment pages, admin panels |
 | `cache-only` | Only serve from cache | Offline-only pages |
 
+### Form Persistence
+
+Never lose user data - forms auto-save to localStorage:
+
+```html
+<script src="/js/form-persistence.js"></script>
+
+<form data-persist="checkout-form">
+    <input type="text" name="email">
+    <textarea name="notes"></textarea>
+    <button type="submit">Save</button>
+</form>
+```
+
+Data is automatically saved on every keystroke and restored on page load. Cleared on successful submit.
+
 ### Artisan Commands
 
 ```bash
@@ -111,6 +128,9 @@ php artisan offline:status
 
 # Clear offline cache (increments version)
 php artisan offline:clear
+
+# List routes with offline middleware
+php artisan offline:routes
 
 # Install/reinstall package
 php artisan offline:install
@@ -128,6 +148,7 @@ php artisan offline:install
 {{-- Show offline status indicator --}}
 @offlineStatus
 ```
+
 
 ## Configuration
 
@@ -148,7 +169,7 @@ return [
 
     'cache' => [
         'max_age' => 86400,      // 24 hours
-        'max_items' => 100,
+        'max_items' => 100,       // Max cached items per cache
     ],
 
     'network_timeout' => 3000,   // 3 seconds
@@ -163,7 +184,8 @@ composer test
 ```
 
 22 tests covering:
-- Service worker generation
+- Service worker generation with TTL management
+- Cache size limits and cleanup
 - Configuration management
 - Blade directives
 - Middleware functionality
@@ -179,18 +201,21 @@ composer test
 
 1. **Enhanced Service Worker** - Dynamically generated with your configuration
 2. **Route Matching** - Wildcard patterns match routes to cache strategies
-3. **Smart Caching** - Different strategies for different content types
-4. **Auto Versioning** - Increment version to invalidate all caches
-5. **Auto Cleanup** - Old cache versions automatically removed
+3. **Smart Caching** - Different strategies for different content types with TTL tracking
+4. **Cache Management** - Automatic size limits (FIFO) and freshness checking
+5. **Auto Versioning** - Increment version to invalidate all caches
+6. **Auto Cleanup** - Old cache versions and stale entries automatically removed
+7. **Form Persistence** - Client-side module saves form data every 500ms to localStorage
 
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for detailed development plan.
 
-**v0.1.0** (Current) - Enhanced service worker with cache strategies
-**v0.2.0** (Next) - Background sync and IndexedDB queue
-**v0.3.0** - Form persistence and developer tools
-**v1.0.0** - Production-ready with full test coverage
+- ✅ **v0.1.0** - Enhanced service worker with cache strategies
+- ✅ **v0.2.0** (Current) - TTL management, cache limits, form persistence
+- 🚧 **v0.3.0** (Next) - Background sync with IndexedDB queue
+- 📅 **v0.4.0** - Cache inspector UI and debug panel
+- 📅 **v1.0.0** - Production-ready with full test coverage
 
 ## Contributing
 
