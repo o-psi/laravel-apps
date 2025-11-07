@@ -4,6 +4,7 @@ namespace EragLaravelPwa;
 
 use EragLaravelPwa\Commands\OfflineClearCommand;
 use EragLaravelPwa\Commands\OfflineInstallCommand;
+use EragLaravelPwa\Commands\OfflineRoutesCommand;
 use EragLaravelPwa\Commands\OfflineStatusCommand;
 use EragLaravelPwa\Commands\PWACommand;
 use EragLaravelPwa\Commands\PwaPublishCommand;
@@ -40,6 +41,7 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
             OfflineInstallCommand::class,
             OfflineStatusCommand::class,
             OfflineClearCommand::class,
+            OfflineRoutesCommand::class,
         ]);
 
         // Publish configuration files
@@ -67,6 +69,10 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/logo.png' => public_path('logo.png'),
         ], 'erag:publish-logo');
+
+        $this->publishes([
+            __DIR__.'/../resources/form-persistence.js' => public_path('js/form-persistence.js'),
+        ], 'offline:assets');
 
     }
 

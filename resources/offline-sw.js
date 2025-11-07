@@ -109,30 +109,87 @@ function getCacheName(request) {
 }
 
 /**
+ * Check if cached response is still fresh
+ */
+function isCacheFresh(cachedResponse) {
+    if (!cachedResponse) return false;
+
+    const cachedTime = cachedResponse.headers.get('sw-cached-time');
+    if (!cachedTime) return true; // No timestamp, assume fresh
+
+    const age = Date.now() - parseInt(cachedTime);
+    return age < (CONFIG.maxAge * 1000);
+}
+
+/**
+ * Add metadata headers to response before caching
+ */
+function addCacheMetadata(response) {
+    const headers = new Headers(response.headers);
+    headers.set('sw-cached-time', Date.now().toString());
+
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headers
+    });
+}
+
+/**
+ * Enforce cache size limits
+ */
+async function enforceCacheLimits(cacheName) {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+
+    if (keys.length > CONFIG.maxItems) {
+        // Remove oldest entries (FIFO)
+        const toDelete = keys.length - CONFIG.maxItems;
+        for (let i = 0; i < toDelete; i++) {
+            await cache.delete(keys[i]);
+            log('Deleted old cache entry:', keys[i].url);
+        }
+    }
+}
+
+/**
  * Cache-first strategy: Try cache, fall back to network
  */
 async function cacheFirst(request) {
     const cacheName = getCacheName(request);
     const cachedResponse = await caches.match(request);
 
-    if (cachedResponse) {
-        log('Cache hit:', request.url);
+    if (cachedResponse && isCacheFresh(cachedResponse)) {
+        log('Cache hit (fresh):', request.url);
         return cachedResponse;
     }
 
-    log('Cache miss, fetching:', request.url);
+    if (cachedResponse) {
+        log('Cache hit (stale):', request.url);
+    } else {
+        log('Cache miss, fetching:', request.url);
+    }
+
     try {
         const networkResponse = await fetch(request);
 
         // Cache successful responses
         if (networkResponse.ok) {
             const cache = await caches.open(cacheName);
-            cache.put(request, networkResponse.clone());
+            const responseToCache = await addCacheMetadata(networkResponse.clone());
+            await cache.put(request, responseToCache);
+            await enforceCacheLimits(cacheName);
         }
 
         return networkResponse;
     } catch (error) {
         log('Network fetch failed:', error);
+
+        // Return stale cache if available
+        if (cachedResponse) {
+            log('Returning stale cache due to network error');
+            return cachedResponse;
+        }
 
         // For navigation requests, return offline page
         if (request.mode === 'navigate') {
@@ -165,7 +222,9 @@ async function networkFirst(request) {
         // Cache successful responses
         if (networkResponse.ok) {
             const cache = await caches.open(cacheName);
-            cache.put(request, networkResponse.clone());
+            const responseToCache = await addCacheMetadata(networkResponse.clone());
+            await cache.put(request, responseToCache);
+            await enforceCacheLimits(cacheName);
         }
 
         log('Network success:', request.url);
@@ -175,7 +234,8 @@ async function networkFirst(request) {
 
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
-            log('Cache hit after network failure:', request.url);
+            const fresh = isCacheFresh(cachedResponse);
+            log('Cache hit after network failure (' + (fresh ? 'fresh' : 'stale') + '):', request.url);
             return cachedResponse;
         }
 
@@ -200,10 +260,12 @@ async function staleWhileRevalidate(request) {
     const cachedResponse = await caches.match(request);
 
     // Fetch fresh version in background
-    const fetchPromise = fetch(request).then(networkResponse => {
+    const fetchPromise = fetch(request).then(async networkResponse => {
         if (networkResponse.ok) {
-            const cache = caches.open(cacheName);
-            cache.then(c => c.put(request, networkResponse.clone()));
+            const cache = await caches.open(cacheName);
+            const responseToCache = await addCacheMetadata(networkResponse.clone());
+            await cache.put(request, responseToCache);
+            await enforceCacheLimits(cacheName);
         }
         return networkResponse;
     }).catch(error => {
@@ -213,7 +275,8 @@ async function staleWhileRevalidate(request) {
 
     // Return cached response immediately if available
     if (cachedResponse) {
-        log('Serving stale cache, revalidating:', request.url);
+        const fresh = isCacheFresh(cachedResponse);
+        log('Serving ' + (fresh ? 'fresh' : 'stale') + ' cache, revalidating:', request.url);
         return cachedResponse;
     }
 
