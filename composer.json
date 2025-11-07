@@ -1,22 +1,22 @@
 {
-    "name": "erag/laravel-pwa",
-    "description": "A simple and easy-to-use PWA (Progressive Web App) package for Laravel applications.",
+    "name": "opsi/laravel-offline",
+    "description": "Production-ready offline-first functionality for Laravel applications with intelligent caching, background sync, and request queueing.",
     "license": "MIT",
     "keywords": [
         "laravel",
+        "offline",
         "pwa",
         "progressive web app",
-        "offline",
+        "offline-first",
         "service worker",
-        "manifest",
-        "laravel package",
-        "laravel pwa"
+        "cache strategies",
+        "background sync",
+        "laravel package"
     ],
     "authors": [
         {
-            "name": "Er Amiit Gupta",
-            "email": "info.eramitgupta@gmail.com",
-            "homepage": "https://github.com/eramitgupta"
+            "name": "o-psi",
+            "homepage": "https://github.com/o-psi"
         }
     ],
     "require": {
@@ -38,21 +38,23 @@
         "format": "vendor/bin/pint"
     },
     "autoload": {
-        "files": [
-            "src/Pwahelpers.php"
-        ],
         "psr-4": {
-            "EragLaravelPwa\\": "src/"
+            "Opsi\\LaravelOffline\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Opsi\\LaravelOffline\\Tests\\": "tests/"
         }
     },
     "prefer-stable": true,
     "extra": {
         "laravel": {
             "providers": [
-                "EragLaravelPwa\\EragLaravelPwaServiceProvider"
+                "Opsi\\LaravelOffline\\OfflineServiceProvider"
             ],
             "aliases": {
-                "Pwa": "EragLaravelPwa\\Facades\\Pwa"
+                "Offline": "Opsi\\LaravelOffline\\Facades\\Offline"
             }
         }
     }

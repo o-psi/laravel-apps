@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Core;
+namespace Opsi\LaravelOffline\Core;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;

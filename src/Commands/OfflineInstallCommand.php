@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Commands;
+namespace Opsi\LaravelOffline\Commands;
 
 use Illuminate\Console\Command;
 
@@ -25,26 +25,26 @@ class OfflineInstallCommand extends Command
         // Publish PWA config if not exists
         $this->info('Publishing PWA configuration...');
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-pwa-config',
+            '--tag' => 'offline:config',
             '--force' => false,
         ]);
 
         // Publish resources
         $this->info('Publishing offline page...');
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-offline',
+            '--tag' => 'offline:resources',
             '--force' => false,
         ]);
 
         $this->info('Publishing manifest...');
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-manifest',
+            '--tag' => 'offline:resources',
             '--force' => false,
         ]);
 
         $this->info('Publishing logo...');
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-logo',
+            '--tag' => 'offline:resources',
             '--force' => false,
         ]);
 

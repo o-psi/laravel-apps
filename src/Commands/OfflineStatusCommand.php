@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Commands;
+namespace Opsi\LaravelOffline\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;

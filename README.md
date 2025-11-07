@@ -34,7 +34,7 @@ Laravel Offline transforms your Laravel applications into powerful offline-first
 ## Installation
 
 ```bash
-composer require erag/laravel-pwa
+composer require opsi/laravel-offline
 php artisan offline:install
 ```
 
@@ -202,7 +202,7 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Credits
 
-Built on [eramitgupta/laravel-pwa](https://github.com/eramitgupta/laravel-pwa) with significant enhancements for offline-first functionality.
+Originally forked from [eramitgupta/laravel-pwa](https://github.com/eramitgupta/laravel-pwa) and significantly enhanced with offline-first functionality, multiple cache strategies, background sync, and developer tools.
 
 ---
 

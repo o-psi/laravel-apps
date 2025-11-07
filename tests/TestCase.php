@@ -1,8 +1,8 @@
 <?php
 
-namespace EragLaravelPwa\Tests;
+namespace Opsi\LaravelOffline\Tests;
 
-use EragLaravelPwa\EragLaravelPwaServiceProvider;
+use Opsi\LaravelOffline\OfflineServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -15,7 +15,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            EragLaravelPwaServiceProvider::class,
+            OfflineServiceProvider::class,
         ];
     }
 

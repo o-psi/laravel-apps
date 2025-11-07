@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Commands;
+namespace Opsi\LaravelOffline\Commands;
 
 use Illuminate\Console\Command;
 
@@ -11,7 +11,7 @@ class PwaPublishCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'erag:install-pwa';
+    protected $signature = 'pwa:install';
 
     /**
      * The console command description.
@@ -27,35 +27,35 @@ class PwaPublishCommand extends Command
     {
         // Step 1: Publish the pwa-config
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-pwa-config',
+            '--tag' => 'offline:config',
             '--force' => true,
         ]);
         $this->info('manifest.json file is published ✔');
 
         // Step 2: Publish the manifest
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-manifest',
+            '--tag' => 'offline:resources',
             '--force' => true,
         ]);
         $this->info('manifest.json file is published ✔');
 
         // Step 3: Publish the offline page
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-offline',
+            '--tag' => 'offline:resources',
             '--force' => true,
         ]);
         $this->info('offline.html file is published ✔');
 
         // Step 4: Publish the sw js
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-sw',
+            '--tag' => 'offline:resources',
             '--force' => true,
         ]);
         $this->info('sw.js file is published ✔');
 
         // Step 5: Publish the logo
         $this->call('vendor:publish', [
-            '--tag' => 'erag:publish-logo',
+            '--tag' => 'offline:resources',
             '--force' => true,
         ]);
         $this->info('logo is published ✔');

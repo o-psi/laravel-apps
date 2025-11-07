@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Facades;
+namespace Opsi\LaravelOffline\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
@@ -8,6 +8,6 @@ class PWA extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \EragLaravelPwa\Services\PWAService::class;
+        return \Opsi\LaravelOffline\Services\PWAService::class;
     }
 }

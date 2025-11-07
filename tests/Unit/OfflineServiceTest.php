@@ -1,9 +1,9 @@
 <?php
 
-namespace EragLaravelPwa\Tests\Unit;
+namespace Opsi\LaravelOffline\Tests\Unit;
 
-use EragLaravelPwa\Services\OfflineService;
-use EragLaravelPwa\Tests\TestCase;
+use Opsi\LaravelOffline\Services\OfflineService;
+use Opsi\LaravelOffline\Tests\TestCase;
 
 class OfflineServiceTest extends TestCase
 {

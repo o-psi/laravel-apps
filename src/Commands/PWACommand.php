@@ -1,14 +1,14 @@
 <?php
 
-namespace EragLaravelPwa\Commands;
+namespace Opsi\LaravelOffline\Commands;
 
-use EragLaravelPwa\Services\PWAService;
+use Opsi\LaravelOffline\Services\PWAService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 
 class PWACommand extends Command
 {
-    protected $signature = 'erag:update-manifest';
+    protected $signature = 'pwa:update-manifest';
 
     protected $description = 'Update the manifest.json file for the PWA.';
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace EragLaravelPwa\Tests\Feature;
+namespace Opsi\LaravelOffline\Tests\Feature;
 
-use EragLaravelPwa\Http\Middleware\OfflineMiddleware;
-use EragLaravelPwa\Tests\TestCase;
+use Opsi\LaravelOffline\Http\Middleware\OfflineMiddleware;
+use Opsi\LaravelOffline\Tests\TestCase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 

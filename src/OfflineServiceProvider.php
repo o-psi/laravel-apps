@@ -1,23 +1,23 @@
 <?php
 
-namespace EragLaravelPwa;
+namespace Opsi\LaravelOffline;
 
-use EragLaravelPwa\Commands\OfflineClearCommand;
-use EragLaravelPwa\Commands\OfflineInstallCommand;
-use EragLaravelPwa\Commands\OfflineRoutesCommand;
-use EragLaravelPwa\Commands\OfflineStatusCommand;
-use EragLaravelPwa\Commands\PWACommand;
-use EragLaravelPwa\Commands\PwaPublishCommand;
-use EragLaravelPwa\Http\Controllers\OfflineController;
-use EragLaravelPwa\Http\Middleware\OfflineMiddleware;
-use EragLaravelPwa\Services\OfflineService;
-use EragLaravelPwa\Services\PWAService;
+use Opsi\LaravelOffline\Commands\OfflineClearCommand;
+use Opsi\LaravelOffline\Commands\OfflineInstallCommand;
+use Opsi\LaravelOffline\Commands\OfflineRoutesCommand;
+use Opsi\LaravelOffline\Commands\OfflineStatusCommand;
+use Opsi\LaravelOffline\Commands\PWACommand;
+use Opsi\LaravelOffline\Commands\PwaPublishCommand;
+use Opsi\LaravelOffline\Http\Controllers\OfflineController;
+use Opsi\LaravelOffline\Http\Middleware\OfflineMiddleware;
+use Opsi\LaravelOffline\Services\OfflineService;
+use Opsi\LaravelOffline\Services\PWAService;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
-class EragLaravelPwaServiceProvider extends ServiceProvider
+class OfflineServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
@@ -47,7 +47,7 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         // Publish configuration files
         $this->publishes([
             __DIR__.'/../config/pwa.php' => config_path('pwa.php'),
-        ], 'erag:publish-pwa-config');
+        ], 'offline:config');
 
         $this->publishes([
             __DIR__.'/../config/offline.php' => config_path('offline.php'),
@@ -56,19 +56,19 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         // Publish resources
         $this->publishes([
             __DIR__.'/../resources/manifest.json' => public_path('manifest.json'),
-        ], 'erag:publish-manifest');
+        ], 'offline:resources');
 
         $this->publishes([
             __DIR__.'/../resources/offline.html' => public_path('offline.html'),
-        ], 'erag:publish-offline');
+        ], 'offline:resources');
 
         $this->publishes([
             __DIR__.'/../resources/sw.js' => public_path('sw.js'),
-        ], 'erag:publish-sw');
+        ], 'offline:resources');
 
         $this->publishes([
             __DIR__.'/../resources/logo.png' => public_path('logo.png'),
-        ], 'erag:publish-logo');
+        ], 'offline:resources');
 
         $this->publishes([
             __DIR__.'/../resources/form-persistence.js' => public_path('js/form-persistence.js'),
@@ -93,7 +93,7 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         // Register aliases
         if (class_exists('Illuminate\Foundation\AliasLoader')) {
             $loader = \Illuminate\Foundation\AliasLoader::getInstance();
-            $loader->alias('PWA', \EragLaravelPwa\Facades\PWA::class);
+            $loader->alias('PWA', \Opsi\LaravelOffline\Facades\PWA::class);
         }
     }
 
@@ -125,24 +125,24 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
     {
         // Original PWA directives
         Blade::directive('PwaHead', function () {
-            return '<?php echo app(\\EragLaravelPwa\\Services\\PWAService::class)->headTag(); ?>';
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\PWAService::class)->headTag(); ?>';
         });
 
         Blade::directive('RegisterServiceWorkerScript', function () {
-            return '<?php echo app(\\EragLaravelPwa\\Services\\PWAService::class)->registerServiceWorkerScript(); ?>';
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\PWAService::class)->registerServiceWorkerScript(); ?>';
         });
 
         // New offline directives
         Blade::directive('offlineHead', function () {
-            return '<?php echo app(\\EragLaravelPwa\\Services\\OfflineService::class)->headTag(); ?>';
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->headTag(); ?>';
         });
 
         Blade::directive('offlineScripts', function () {
-            return '<?php echo app(\\EragLaravelPwa\\Services\\OfflineService::class)->registerScript(); ?>';
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->registerScript(); ?>';
         });
 
         Blade::directive('offlineStatus', function () {
-            return '<?php echo app(\\EragLaravelPwa\\Services\\OfflineService::class)->statusIndicator(); ?>';
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->statusIndicator(); ?>';
         });
 
         // Cache directive
@@ -151,7 +151,7 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         });
 
         Blade::directive('endOfflineCache', function ($expression) {
-            return "<?php echo app(\\EragLaravelPwa\\Services\\OfflineService::class)->cacheWrapper({$expression}, ob_get_clean()); ?>";
+            return "<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->cacheWrapper({$expression}, ob_get_clean()); ?>";
         });
 
         // Sync directive
@@ -160,7 +160,7 @@ class EragLaravelPwaServiceProvider extends ServiceProvider
         });
 
         Blade::directive('endOfflineSync', function () {
-            return "<?php echo app(\\EragLaravelPwa\\Services\\OfflineService::class)->syncWrapper(ob_get_clean()); ?>";
+            return "<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->syncWrapper(ob_get_clean()); ?>";
         });
     }
 }

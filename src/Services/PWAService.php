@@ -1,6 +1,6 @@
 <?php
 
-namespace EragLaravelPwa\Services;
+namespace Opsi\LaravelOffline\Services;
 
 use Illuminate\Support\Facades\File;
 

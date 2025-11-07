@@ -1,8 +1,8 @@
 <?php
 
-namespace EragLaravelPwa\Http\Controllers;
+namespace Opsi\LaravelOffline\Http\Controllers;
 
-use EragLaravelPwa\Services\OfflineService;
+use Opsi\LaravelOffline\Services\OfflineService;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 

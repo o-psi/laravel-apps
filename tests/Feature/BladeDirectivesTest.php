@@ -1,8 +1,8 @@
 <?php
 
-namespace EragLaravelPwa\Tests\Feature;
+namespace Opsi\LaravelOffline\Tests\Feature;
 
-use EragLaravelPwa\Tests\TestCase;
+use Opsi\LaravelOffline\Tests\TestCase;
 use Illuminate\Support\Facades\Blade;
 
 class BladeDirectivesTest extends TestCase

@@ -1,8 +1,8 @@
 <?php
 
-namespace EragLaravelPwa\Tests\Unit;
+namespace Opsi\LaravelOffline\Tests\Unit;
 
-use EragLaravelPwa\Tests\TestCase;
+use Opsi\LaravelOffline\Tests\TestCase;
 
 class ConfigurationTest extends TestCase
 {
