@@ -227,8 +227,40 @@
         form.addEventListener('input', debouncedSave);
         form.addEventListener('change', debouncedSave);
 
-        // Clear data on successful submit
-        form.addEventListener('submit', function() {
+        // Clear data on successful submit or queue for sync
+        form.addEventListener('submit', function(e) {
+            // If offline and queue manager available, queue the request
+            if (!navigator.onLine && window.OfflineQueue) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+
+                // Queue the form submission
+                window.OfflineQueue.enqueue(
+                    form.action,
+                    form.method.toUpperCase(),
+                    { 'Content-Type': 'application/json' },
+                    JSON.stringify(data),
+                    { formId, type: 'form-submission' }
+                ).then(() => {
+                    log('Form queued for sync');
+                    clearFormData(formId);
+
+                    // Show user feedback
+                    if (typeof showQueuedNotification === 'function') {
+                        showQueuedNotification(form);
+                    } else {
+                        alert('Your form has been saved and will be submitted when you\'re back online.');
+                    }
+                }).catch((error) => {
+                    console.error('[Form Persistence] Failed to queue form:', error);
+                    alert('Failed to save form offline. Please try again.');
+                });
+
+                return false;
+            }
+
             log('Form submitted, clearing saved data');
             clearFormData(formId);
         });

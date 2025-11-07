@@ -72,6 +72,8 @@ class OfflineServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../resources/form-persistence.js' => public_path('js/form-persistence.js'),
+            __DIR__.'/../resources/queue-manager.js' => public_path('js/queue-manager.js'),
+            __DIR__.'/../resources/sync-status.js' => public_path('js/sync-status.js'),
         ], 'offline:assets');
 
     }
@@ -161,6 +163,11 @@ class OfflineServiceProvider extends ServiceProvider
 
         Blade::directive('endOfflineSync', function () {
             return "<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->syncWrapper(ob_get_clean()); ?>";
+        });
+
+        // Sync status widget
+        Blade::directive('offlineSyncStatus', function () {
+            return '<?php echo app(\\Opsi\\LaravelOffline\\Services\\OfflineService::class)->syncStatusWidget(); ?>';
         });
     }
 }

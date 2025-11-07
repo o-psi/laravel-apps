@@ -439,6 +439,170 @@ self.addEventListener('message', (event) => {
             })
         );
     }
+
+    if (event.data && event.data.type === 'QUEUE_REQUEST') {
+        // Queue a request for background sync
+        const { url, method, headers, body } = event.data.request;
+
+        event.waitUntil(
+            queueRequest(url, method, headers, body)
+                .then(() => {
+                    log('Request queued for sync:', method, url);
+                    if (event.ports && event.ports[0]) {
+                        event.ports[0].postMessage({ success: true });
+                    }
+                })
+                .catch((error) => {
+                    log('Failed to queue request:', error);
+                    if (event.ports && event.ports[0]) {
+                        event.ports[0].postMessage({ success: false, error: error.message });
+                    }
+                })
+        );
+    }
 });
+
+/**
+ * Background Sync event: Process queued requests
+ */
+if ('sync' in self.registration) {
+    self.addEventListener('sync', (event) => {
+        log('Background sync event:', event.tag);
+
+        if (event.tag === 'offline-sync') {
+            event.waitUntil(processBackgroundSync());
+        }
+    });
+}
+
+/**
+ * Queue a request in IndexedDB for later sync
+ */
+async function queueRequest(url, method, headers, body) {
+    // Open IndexedDB
+    const db = await openQueueDB();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['requests'], 'readwrite');
+        const store = transaction.objectStore('requests');
+
+        const request = {
+            url,
+            method,
+            headers,
+            body,
+            timestamp: Date.now(),
+            retries: 0
+        };
+
+        const addRequest = store.add(request);
+
+        addRequest.onsuccess = () => {
+            log('Request added to queue:', request.id);
+
+            // Register background sync
+            if ('sync' in self.registration) {
+                self.registration.sync.register('offline-sync')
+                    .then(() => log('Background sync registered'))
+                    .catch((error) => log('Failed to register sync:', error));
+            }
+
+            resolve();
+        };
+
+        addRequest.onerror = () => reject(addRequest.error);
+    });
+}
+
+/**
+ * Open IndexedDB for queue storage
+ */
+function openQueueDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('offline-queue', 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('requests')) {
+                const store = db.createObjectStore('requests', {
+                    keyPath: 'id',
+                    autoIncrement: true
+                });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+    });
+}
+
+/**
+ * Process all queued requests during background sync
+ */
+async function processBackgroundSync() {
+    log('Processing background sync...');
+
+    const db = await openQueueDB();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['requests'], 'readwrite');
+        const store = transaction.objectStore('requests');
+        const getAllRequest = store.getAll();
+
+        getAllRequest.onsuccess = async () => {
+            const requests = getAllRequest.result;
+            log('Found', requests.length, 'queued requests');
+
+            const results = [];
+
+            for (const request of requests) {
+                try {
+                    const response = await fetch(request.url, {
+                        method: request.method,
+                        headers: request.headers,
+                        body: request.body
+                    });
+
+                    if (response.ok) {
+                        // Success - remove from queue
+                        const deleteTransaction = db.transaction(['requests'], 'readwrite');
+                        const deleteStore = deleteTransaction.objectStore('requests');
+                        deleteStore.delete(request.id);
+
+                        log('Synced request:', request.method, request.url);
+                        results.push({ success: true, request });
+                    } else {
+                        // Server error - update retry count
+                        request.retries++;
+                        const updateTransaction = db.transaction(['requests'], 'readwrite');
+                        const updateStore = updateTransaction.objectStore('requests');
+                        updateStore.put(request);
+
+                        log('Request failed, will retry:', request.url);
+                        results.push({ success: false, request, status: response.status });
+                    }
+                } catch (error) {
+                    // Network error - keep in queue
+                    log('Network error during sync:', error);
+                    results.push({ success: false, request, error: error.message });
+                }
+            }
+
+            // Notify all clients about sync completion
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'SYNC_COMPLETE',
+                    results
+                });
+            });
+
+            resolve();
+        };
+
+        getAllRequest.onerror = () => reject(getAllRequest.error);
+    });
+}
 
 log('Service worker script loaded');

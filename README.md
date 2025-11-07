@@ -7,20 +7,23 @@
 
 Laravel Offline transforms your Laravel applications into powerful offline-first experiences. Built on top of [laravel-pwa](https://github.com/eramitgupta/laravel-pwa), it adds intelligent caching strategies, background sync, and request queueing.
 
-## Current Status: v0.2.0 - Enhanced Configuration
+## Current Status: v0.3.0 - Background Sync
 
-**Phase 1 & 2 Complete** - Enhanced service worker, multiple cache strategies, TTL management, form persistence, and comprehensive developer tools.
+**Phase 1, 2 & 3 Complete** - Enhanced service worker, multiple cache strategies, TTL management, form persistence, background sync with IndexedDB queue, and comprehensive developer tools.
 
 ## Features
 
-### ✅ Available Now (v0.2.0)
+### ✅ Available Now (v0.3.0)
 
 - **Multiple Cache Strategies** - cache-first, network-first, stale-while-revalidate, network-only, cache-only
 - **Route-Based Caching** - Configure strategies per route pattern with wildcard support
 - **Cache TTL Management** - Automatic freshness checking with stale-while-offline support
 - **Cache Size Limits** - Automatic FIFO cleanup when cache exceeds max items
-- **Form Persistence** - Auto-save forms to localStorage, restore on reload (never lose user data)
-- **Blade Directives** - Simple integration with `@offlineHead`, `@offlineScripts`, `@offlineStatus`
+- **Background Sync** - IndexedDB queue manager with automatic retry and exponential backoff
+- **Request Queueing** - Queue POST/PUT/DELETE requests when offline, auto-sync when online
+- **Form Persistence** - Auto-save forms to localStorage, restore on reload, queue when offline
+- **Sync Status Widget** - Real-time UI showing pending requests and sync progress
+- **Blade Directives** - Simple integration with `@offlineHead`, `@offlineScripts`, `@offlineStatus`, `@offlineSyncStatus`
 - **Middleware Support** - Per-route cache control via middleware
 - **Artisan Commands** - `offline:install`, `offline:status`, `offline:clear`, `offline:routes`
 - **Developer Tools** - Debug logging with fresh/stale indicators and cache inspection
@@ -28,9 +31,10 @@ Laravel Offline transforms your Laravel applications into powerful offline-first
 
 ### 🚧 Coming Soon
 
-- Background sync with IndexedDB queue (Phase 3)
 - Cache inspector UI (Phase 4)
 - Advanced conflict resolution (Phase 5)
+- File upload queueing with progress
+- Multi-tab synchronization
 
 ## Installation
 
@@ -104,21 +108,39 @@ Route::get('/profile', ProfileController::class)
 | `network-only` | Always fetch from network | Payment pages, admin panels |
 | `cache-only` | Only serve from cache | Offline-only pages |
 
-### Form Persistence
+### Background Sync & Form Persistence
 
-Never lose user data - forms auto-save to localStorage:
+Never lose user data - forms auto-save to localStorage and queue when offline:
 
 ```html
+<script src="/js/queue-manager.js"></script>
 <script src="/js/form-persistence.js"></script>
 
-<form data-persist="checkout-form">
+<form data-persist="checkout-form" action="/api/checkout" method="POST">
     <input type="text" name="email">
     <textarea name="notes"></textarea>
-    <button type="submit">Save</button>
+    <button type="submit">Submit</button>
 </form>
 ```
 
-Data is automatically saved on every keystroke and restored on page load. Cleared on successful submit.
+- Data is automatically saved on every keystroke and restored on page load
+- When offline, form submissions are queued in IndexedDB
+- Automatic retry with exponential backoff when connection returns
+- Real-time sync status shown in UI widget
+
+Or use Blade directive for automatic queueing:
+
+```blade
+@offlineSync
+<form action="/api/save" method="POST">
+    @csrf
+    <input type="text" name="title">
+    <button type="submit">Save</button>
+</form>
+@endOfflineSync
+
+@offlineSyncStatus  {{-- Shows sync progress widget --}}
+```
 
 ### Artisan Commands
 
@@ -147,6 +169,14 @@ php artisan offline:install
 
 {{-- Show offline status indicator --}}
 @offlineStatus
+
+{{-- Show sync status widget (queued requests) --}}
+@offlineSyncStatus
+
+{{-- Wrap form for automatic queueing when offline --}}
+@offlineSync
+<form>...</form>
+@endOfflineSync
 ```
 
 
@@ -212,9 +242,9 @@ composer test
 See [ROADMAP.md](ROADMAP.md) for detailed development plan.
 
 - ✅ **v0.1.0** - Enhanced service worker with cache strategies
-- ✅ **v0.2.0** (Current) - TTL management, cache limits, form persistence
-- 🚧 **v0.3.0** (Next) - Background sync with IndexedDB queue
-- 📅 **v0.4.0** - Cache inspector UI and debug panel
+- ✅ **v0.2.0** - TTL management, cache limits, form persistence
+- ✅ **v0.3.0** (Current) - Background sync with IndexedDB queue and retry logic
+- 🚧 **v0.4.0** (Next) - Cache inspector UI and debug panel
 - 📅 **v1.0.0** - Production-ready with full test coverage
 
 ## Contributing
